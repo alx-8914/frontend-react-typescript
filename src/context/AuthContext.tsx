@@ -2,6 +2,7 @@ import { createContext } from "react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import api from "../services/api";
+import { AxiosError } from "axios";
 
 export interface AuthContextType {
   token: string | null;
@@ -16,9 +17,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
 
   const login = async (email: string, password: string) => {
-    const response = await api.post("/auth/login", { email, password });
-    localStorage.setItem("token", response.data.token);
-    setToken(response.data.token);
+    try {
+      console.log("Dados enviados:", { email, password }); // 👈
+      const response = await api.post("/auth/login", { email, password });
+      console.log("Resposta da API:", response.data); // 👈
+      localStorage.setItem("token", response.data.token);
+    } catch (error) {
+      const err = error as AxiosError;
+      console.error("Erro no login:", err.response?.data);
+      throw error;
+    }
   };
 
   const logout = () => {
